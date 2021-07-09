@@ -29,7 +29,7 @@ LAST_ROW = ENCODING_PADDING
 
 
 # Encodes a provided image with the morse code message given some data
-def encode(filepath: str, data: str) -> str:
+def encode(filepath: str, data: str, logs=False) -> str:
     # Check if the image exists or not
     file_exists = os.path.exists(filepath)
 
@@ -41,18 +41,21 @@ def encode(filepath: str, data: str) -> str:
         """ CONSTANTS """
         # Size of the image loaded
         IMAGE_DIMENSIONS = (len(image_data), len(image_data[0]))
-        print(f'Image Dimensions: {IMAGE_DIMENSIONS}')
 
         # Determine the height of the section to be encoded in the image
         ENCODING_HEIGHT = _get_encoding_height()
 
         # Determine the padding from top, left and right sides
         ENCODING_PADDING_RIGHT = IMAGE_DIMENSIONS[1] - ENCODING_PADDING
-        print(f'Encoding Padding Right: {ENCODING_PADDING_RIGHT}')
 
         # Make all characters in the data uppercase
         data = data.upper()
-        print(f'Encoding Data: {data}')
+
+        if logs:
+            print(f'Image Dimensions: {IMAGE_DIMENSIONS}')
+            print(f'Encoding Data: {data}')
+            print(f'Encoding Padding Right: {ENCODING_PADDING_RIGHT}')
+
 
         # Loop through the characters of the data provided
         for index, character in enumerate(data):
@@ -66,19 +69,19 @@ def encode(filepath: str, data: str) -> str:
                 PADDING_RIGHT=ENCODING_PADDING_RIGHT,
                 is_last_char=((index + 1) == len(data)))
         
-        opencv.imshow('NULL FILL TEST', image_data)
-        opencv.waitKey(0)
+        return image_data
     else:
         return 'File not found', None
 
 def _draw_data_encodings(image, morse_codes, PADDING_RIGHT, is_last_char = False):
-    global LAST_ROW
-    global LAST_COL
-
     """
     Draws a single character on the image, and returns the last position ended.
     Takes in the image data and the morse/binary encoding of the character to be encoded.
     """
+
+    global LAST_ROW
+    global LAST_COL
+    
     ROW_HEIGHT = 15
     COL_WIDTH = 15
 
@@ -103,13 +106,13 @@ def _draw_data_encodings(image, morse_codes, PADDING_RIGHT, is_last_char = False
         for index, code in enumerate(morse_codes):
 
             # also loop through every row needed to make a row of morse codes
-            for row in range(LAST_ROW, (LAST_ROW + (ROW_HEIGHT + 1))):
+            for row in range(LAST_ROW, (LAST_ROW + (ROW_HEIGHT)) + 1):
 
                 # draw a dash morse code char
                 if code == 0:
 
                     # a dash has 2 times the width of a single column
-                    for col in range(LAST_COL + COL_WIDTH, (LAST_COL + (COL_WIDTH * 2) + 1) + COL_WIDTH):
+                    for col in range(LAST_COL + COL_WIDTH, (LAST_COL + (COL_WIDTH * 2)) + COL_WIDTH):
 
                         # rewrite the pixel to a while color
                         image[row][col - 1] = MORSE_CODE_COLOR
@@ -198,10 +201,10 @@ def _fill_null(image: list, null_col: int, null_row: int) -> None:
     # every single row of pixels of the null space
     for row in range(null_row, (null_row + ROW_HEIGHT) + 1):
         # every single pixel in the picture / null space
-        for col in range(null_col + COL_SPACE, (len(image[0])) - ENCODING_PADDING):
-            image[row][col] = [ 150, 20, 20 ]
+        for col in range(null_col + COL_SPACE - 1, (len(image[0])) - ENCODING_PADDING):
+            image[row][col] = [ 48, 33, 221 ] # RGB => BGR
 
-
+# QRM Code
 # takes in the image loaded and determines whether or not it's dark or light to select the approriate color
 # returns a color of the morse code in RGB suitable for the image
 def _get_morse_code_color(image: list) -> list:
@@ -211,7 +214,8 @@ def _get_morse_code_color(image: list) -> list:
     else:
         return [255, 255, 255]
 
-    
 
+image = encode('/Users/libbylebyane/Projects/Python/@Facecode/CONCEPTS/MF_Code/MFCODE_TEMPLATE_3.png', "lebyanelm@facecode")
 
-encode('/Users/libbylebyane/Projects/@Facecode/CONCEPTS/MF_Code/MFCODE_TEMPLATE.png', 'gingaandvanila')
+print(image)
+opencv.imwrite('encoded_image.png', image)
